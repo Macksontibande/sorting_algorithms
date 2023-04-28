@@ -1,74 +1,110 @@
 #include "sort.h"
 
 /**
- * nodes_swap - swapped the nodes in a list
+ * find_pow - find power of a number
+ * @x: the number
+ * @y: the value of power
  *
- * @list: first node in doubly linked list
- * @first: address of first node
- * @second: address of second node
+ * Return: the power of x
  */
-void nodes_swap(listint_t **list, listint_t *first, listint_t *second)
+int find_pow(int x, size_t y)
 {
-	if (!first->prev)	/* at the first node */
-		*list = second;
-	else
-		first->prev->next = second;
+	if (y == 0)
+		return (1);
 
-	second->prev = first->prev;
-
-	if (second->next)	/* at the last node */
-		second->next->prev = first;
-
-
-	first->prev = second;
-	first->next = second->next;
-	second->next = first;
+	return (x * find_pow(x, y - 1));
 }
 
 /**
- * cocktail_sort_list - application of the cocktail sort algorithm
- * to sort numbers
+ * seq_generator - generate sequence
+ * @size: size of sequence
  *
- * @list: first node of doubly linked list
+ * Return: pointer to the address of sequence
  */
-void cocktail_sort_list(listint_t **list)
+int *seq_generator(size_t size)
 {
-	listint_t *future;
-	int swapped = 1;
+	size_t n = 0;
+	int i = 0, nth_term, *sequence;
 
-	if (!list || !(*list) || !(*list)->next)  /* only one node */
+	sequence = malloc(sizeof(int) * size);
+	if (sequence == NULL)
+		return (NULL);
+
+	nth_term = 0;
+	while (n < size)
+	{
+		nth_term = nth_term + find_pow(3, n);
+		sequence[i] = nth_term;
+		n++;
+		i++;
+	}
+	return (sequence);
+}
+
+/**
+ * reverse_seq - reverse sequence
+ * @sequence: pointer to the address of sequence
+ * @size: size of sequence
+ *
+ * Return: sequence in reverse
+ */
+int *reverse_seq(int *sequence, size_t size)
+{
+	int *rev_seq;
+	size_t i = 0, seq_index;
+
+	rev_seq = malloc(sizeof(int) * size);
+	if (rev_seq == NULL)
+		return (NULL);
+
+	seq_index = size - 1;
+	while (i < size)
+	{
+		rev_seq[i] = sequence[seq_index];
+		i++;
+		seq_index--;
+	}
+	return (rev_seq);
+}
+
+/**
+ * shell_sort - sorts using the Shell sort algorithm
+ * @array: array to be sorted
+ * @size: size of array
+ *
+ * Return: nothing
+ */
+void shell_sort(int *array, size_t size)
+{
+	int j, flag = 0;
+	int temp, *sequence, *rev_seq, hold;
+	size_t i, seq_index = 0;
+
+	sequence = seq_generator(size);
+	if (sequence == NULL)
 		return;
 
-	future = *list;
-	while (swapped)
+	rev_seq = reverse_seq(sequence, size);
+	if (rev_seq == NULL)
+		return;
+
+	while (seq_index < size)
 	{
-		swapped = 0;
-		while (future->next)    /* traverse forward */
+		for (i = rev_seq[seq_index]; i < size; i++)
 		{
-			if (future->n > future->next->n)
+			temp = array[i];
+			hold = rev_seq[seq_index];
+			for (j = i; j >= hold && array[j - hold] > temp; j -= hold)
 			{
-				nodes_swap(list, future, future->next);
-				print_list(*list);
-				swapped = 1;
-				continue;
+				array[j] = array[j - rev_seq[seq_index]];
 			}
-			future = future->next;
+			array[j] = temp;
+			flag = 1;
 		}
-
-		if (!swapped)   /* list is sorted */
-			break;
-
-		swapped = 0;
-		while (future->prev)    /* traverse backwards */
-		{
-			if (future->n < future->prev->n)
-			{
-				nodes_swap(list, future->prev, future);
-				print_list(*list);
-				swapped = 1;
-				continue;
-			}
-			future = future->prev;
-		}
+		if (flag)
+			print_array(array, size);
+		seq_index++;
 	}
+	free(sequence);
+	free(rev_seq);
 }
